@@ -1,3 +1,4 @@
+# coding: utf-8
 #-------------------------------------------------------------------------------
 # Name:        MailboxesToVirtualmin
 # Purpose:     Converts the structure of mailboxes to Virtualmin format. Must be run as root!
@@ -22,9 +23,9 @@ def _chown(path, uid, gid):
                 os.chown(itempath, uid, gid)
             elif os.path.isdir(itempath):
                 os.chown(itempath, uid, gid)
-                self._chown(itempath, uid, gid)
- 
- 
+                _chown(itempath, uid, gid)
+
+
 # Первая часть домена второго уровня
 Domain = 'rost-alko'
 # Вторая часть домена второго уровня
@@ -42,7 +43,9 @@ for UserName in UserFolders:
     # Перемещаем в новую папку, получается /home/example/homes/username/Maildir
     shutil.move(OldPath,NewRoot + UserName + '/Maildir')
     # Перебиваем права, должны быть username@example.com:example
-    _chown(NewRoot + UserName + '/' + 'Maildir', pwd.getpwnam(UserName + '@' + Domain + DomainEnd).pw_uid, grp.getgrnam(Domain).gr_gid)
- 
-# Микродебаг, числа должны совпадать
-print('All done,' + len(UserFolders) + ' input boxes processed to ' + len(os.listdir(NewRoot)) + ' output boxes\n')
+    try:
+        _chown(NewRoot + UserName + '/' + 'Maildir', pwd.getpwnam(UserName + '@' + Domain + DomainEnd).pw_uid, grp.getgrnam(Domain).gr_gid)
+    except KeyError:
+        _chown(NewRoot + UserName + '/' + 'Maildir', pwd.getpwnam(Domain).pw_uid, grp.getgrnam(Domain).gr_gid)
+
+print('All done, ' + str(len(UserFolders)) + ' mailboxes converted\n')
